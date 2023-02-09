@@ -1,0 +1,70 @@
+#1. Cree un archivo .yaml en el cual construya un monitoreo de CPU, Memoria y Disco de un servidor de aplicaciones.
+#2. Maneje las variables del yaml mediante una biblioteca en Azure Devops en una version sandbox, 
+#o puede utilizar una cuenta sandbox gratis en AWS con Code Commit y Code Pipeline, o maneje las 
+#variables directamente en el mismo yaml.
+#3. Cargue el yaml creado, en Azure Devops en una version sandbox, o puede utilizar una cuenta sandbox 
+#gratis en AWS con Code Commit y Code Pipeline. En caso que no tenga disponibilidad de Azure Devops, 
+#abra una cuenta sandbox / free en AWS, y cargue el yaml directamente en el servicio de Cloud Formation 
+#y use code pipeline para su despliegue.
+#4. Cree un pipeline de tipo Build en Azure Devops en una version sandbox, o puede utilizar una cuenta 
+#sandbox gratis en AWS con Code Commit y Code Pipeline, o terraform
+#5. Cree un release para desplegar el pipeline creado.
+#Despliegue el yaml creado con el pipeline creado, en la cuenta sandbox de  AWS 
+
+
+type    : agent.cpu
+label   : CPU
+period  : 60
+timeout : 10
+alarms  :
+  cpu-usage:
+    label: CPU usage
+    notification_plan_id: np000000
+    criteria: |
+      if (metric['usage_average'] > 95) {
+        return new AlarmStatus(CRITICAL, 'CPU usage is
+        #{usage_average}%, arriba de tu limite de advertecia del 95%');
+      }
+      if (metric['usage_average'] > 90) {
+        return new AlarmStatus(WARNING, 'CPU usage is
+        #{usage_average}%, arriba de tu limite de advertecia del 90%');
+      }
+      return new AlarmStatus(OK, 'El uso de CPU es #{usage_average}%,
+      debajo de tu limite de advertecia del 90%');
+
+
+type_disk    : agent.filesystem
+label_disk   : Filesystem - /
+period_disk  : 60
+timeout_disk : 10
+details_disk :
+target_disk : /
+alarms_disk  :
+  disk-size:
+    label: Usage on /
+    notification_plan_id: np0000001
+    criteria: |
+      if (percentage(metric['used'], metric['total']) > 90) {
+          return new AlarmStatus(CRITICAL, 'El uso del disco esta arriba del 90%, #{used} del #{total}');
+      }
+      if (percentage(metric['used'], metric['total']) > 80) {
+          return new AlarmStatus(WARNING, 'El uso del disco esta arriba 80%, #{used} del #{total}');
+      }
+
+type_memory    : agent.memory
+label_memory   : Memory
+period_memory  : 60
+timeout_memory : 10
+alarms_memory  :
+  actual-memory-usage:
+    label: Memory usage
+    notification_plan_id: np000002
+    criteria: |
+      if (percentage(metric['actual_used'], metric['total']) > 90){
+        return new AlarmStatus(CRITICAL, "El uso de la memoria esta arriba de la advertencia del 90%");
+      }
+      if (percentage(metric['actual_used'], metric['total']) > 80){
+        return new AlarmStatus(WARNING, "El uso de la memoria esta arriba de la advertecia del 80%");
+      }
+      return new AlarmStatus(OK, "El uso de la memoria esta debajo de la advercia del 80%");
+
